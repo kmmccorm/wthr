@@ -1,7 +1,9 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { SAMPLE_RESPONSE } from './sampleResponse.js'
 import { extractMetrics, DEGREE } from './weather.js'
 import './App.css'
+
+const REFRESH_MS = 60_000
 
 function MetricCard({ label, value, unit, sub, icon }) {
   return (
@@ -26,8 +28,35 @@ function fmt(n, digits = 0) {
 }
 
 export default function App() {
-  // Swap SAMPLE_RESPONSE for a fetch to your signed backend in production.
-  const metrics = useMemo(() => extractMetrics(SAMPLE_RESPONSE), [])
+  const [metrics, setMetrics] = useState(() => extractMetrics(SAMPLE_RESPONSE))
+  const [source, setSource] = useState('sample')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        const res = await fetch('/api/current')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const next = extractMetrics(data)
+        if (next && !cancelled) {
+          setMetrics(next)
+          setSource('live')
+        }
+      } catch {
+        // Keep showing the last good (or sample) data on failure.
+        if (!cancelled) setSource((s) => (s === 'live' ? 'live' : 'sample'))
+      }
+    }
+
+    load()
+    const id = setInterval(load, REFRESH_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
 
   if (!metrics) {
     return (
@@ -48,7 +77,12 @@ export default function App() {
     <main className="app">
       <header className="app-header">
         <h1>Current Conditions</h1>
-        {observed && <p className="observed">as of {observed}</p>}
+        {observed && (
+          <p className="observed">
+            as of {observed}
+            {source === 'sample' && ' · sample data'}
+          </p>
+        )}
       </header>
 
       <div className="grid">
