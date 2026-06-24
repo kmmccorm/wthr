@@ -12,10 +12,24 @@ export const SAMPLE_RESPONSE = {
         {
           temp: 63.7,
           heat_index: 62.5,
+          hum: 71.2,
           wind_speed_last: 1.44,
           wind_dir_last: 337,
           wind_speed_hi_last_2_min: 2.06,
           wind_dir_at_hi_speed_last_2_min: 337,
+          ts: 1782275700,
+        },
+      ],
+    },
+    {
+      lsid: 831621,
+      sensor_type: 242,
+      data_structure_type: 19,
+      data: [
+        {
+          bar_sea_level: 30.05,
+          bar_trend: 0.02,
+          bar_absolute: 29.92,
           ts: 1782275700,
         },
       ],

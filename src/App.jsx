@@ -120,6 +120,25 @@ export default function App() {
               : 'peak last 2 min'
           }
         />
+        <MetricCard
+          label="Humidity"
+          icon="💧"
+          value={fmt(metrics.humidity)}
+          unit="%"
+        />
+        <MetricCard
+          label="Barometer Trend"
+          icon="📈"
+          value={metrics.barometer.label ?? '--'}
+          sub={
+            metrics.barometer.trend == null
+              ? null
+              : `${metrics.barometer.trend >= 0 ? '+' : ''}${fmt(
+                  metrics.barometer.trend,
+                  2
+                )} inHg / 3h`
+          }
+        />
       </div>
     </main>
   )
