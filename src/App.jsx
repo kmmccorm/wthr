@@ -94,7 +94,13 @@ export default function App() {
         />
         <MetricCard
           label="Heat Index"
-          icon="🥵"
+          icon={
+            metrics.heatIndex != null && metrics.temperature != null
+              ? metrics.heatIndex - metrics.temperature > 5
+                ? '🥵'
+                : '😎'
+              : '🥵'
+          }
           value={fmt(metrics.heatIndex, 1)}
           unit={`${DEGREE}F`}
         />
