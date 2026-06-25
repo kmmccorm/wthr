@@ -59,6 +59,7 @@ export function extractMetrics(response) {
     },
     barometer: {
       trend: barTrend,
+      value: bar?.bar_sea_level ?? null,
       label: describeBarTrend(barTrend),
     },
     observedAt: r.ts ? new Date(r.ts * 1000) : null,

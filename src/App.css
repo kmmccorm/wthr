@@ -1,100 +1,16 @@
-.app {
-  max-width: 480px;
+/* Centering frame for the Parkview Weather design screens.
+   The screens themselves carry their own backgrounds via inline styles. */
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
   margin: 0 auto;
-  padding: max(env(safe-area-inset-top), 20px) 16px
-    max(env(safe-area-inset-bottom), 20px);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.app-header {
-  padding: 4px 4px 0;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.observed {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 18px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 128px;
-}
-
-.card-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.card-icon {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.card-label {
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.card-value {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-top: auto;
-}
-
-.value-number {
-  font-size: 2.4rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
-}
-
-.value-unit {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.card-sub {
-  color: var(--muted);
-  font-size: 0.78rem;
+  min-height: 100dvh;
+  overflow: hidden;
 }
 
 .empty {
   text-align: center;
-  color: var(--muted);
+  color: #8da2bf;
   margin-top: 40vh;
-}
-
-/* Single column on very narrow screens */
-@media (max-width: 340px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
 }
