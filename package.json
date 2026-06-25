@@ -1,0 +1,38 @@
+{
+  "name": "wthr",
+  "version": "0.1.0",
+  "description": "WeatherLink connectivity — a small TypeScript client and CLI for the Davis WeatherLink v2 API",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "wthr": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test test/*.test.ts",
+    "dev": "node --import tsx ./src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "weatherlink",
+    "davis",
+    "weather",
+    "api",
+    "cli"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
