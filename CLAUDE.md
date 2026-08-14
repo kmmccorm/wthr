@@ -16,11 +16,16 @@ node --env-file=.env server/index.js
 # or
 npm run server
 
+# Lint (ESLint flat config; also lints server/ and netlify/)
+npm run lint
+
 # Build for production
 npm run build
 ```
 
-No test runner is configured. There are no lint scripts in package.json.
+No test runner is configured.
+
+`eslint.config.js` splits the project into two blocks: `src/**` gets browser globals, JSX parsing, `eslint-plugin-react-hooks` and `react-refresh`; `server/`, `netlify/functions/`, and the config files get Node globals and `@eslint/js` recommended only. Lint is not wired into CI — it's a local check.
 
 ## Environment setup
 
@@ -39,8 +44,9 @@ The API secret never reaches the browser. The signing proxy computes a HMAC-SHA2
 - `netlify/functions/current.mjs` — Netlify Function (v2 API, same signing logic) served at `/api/current`
 
 **Frontend (`src/`):**
-- `weather.js` — pure data extraction from the WeatherLink response. The outdoor ISS sensor is found by `data_structure_type === 23` or `sensor_type === 37`. `extractMetrics()` pulls temperature, heat index, wind speed/direction, and 2-minute peak gust.
+- `weather.js` — pure data extraction from the WeatherLink response. The outdoor ISS sensor is found by `data_structure_type === 23` or `sensor_type === 37`; the barometer sensor by `data_structure_type === 19`. `extractMetrics()` pulls temperature, heat index, humidity, wind speed/direction, 2-minute peak gust, and barometric trend/label.
 - `App.jsx` — polls `/api/current` every 60 seconds. On failure, silently keeps showing the last good data (or the bundled `sampleResponse.js` on first load). The `source` state tracks `'live'` vs `'sample'` and shows a label when showing sample data.
+  - **Parkview Weather design system:** `computeValues()` derives every display string/number (`v.*`) that the themes render from the raw metrics — formatting, condition wording, greeting text, etc. — mirroring the original design's `DCLogic.renderVals()`. There are three theme components (`Nightfall`, `Brass`, `Sunny`), each a full-screen, self-contained UI reading only from `v`; a floating `Switcher` toggles between them via `design` state (not persisted). When adding a data point, thread it through `computeValues()` first rather than reading `metrics` directly inside a theme component.
 
 **Deployment targets:**
 - **GitHub Pages** — static build only (no live data; falls back to sample). The workflow sets `VITE_BASE=/wthr/` for the asset base path.
