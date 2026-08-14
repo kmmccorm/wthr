@@ -10,6 +10,13 @@ function num(n, d = 0) {
   return n == null || Number.isNaN(n) ? '--' : n.toFixed(d)
 }
 
+// 1 -> "1st", 2 -> "2nd", 11 -> "11th", 22 -> "22nd".
+function ordinal(n) {
+  const suffixes = ['th', 'st', 'nd', 'rd']
+  const mod = n % 100
+  return n + (suffixes[(mod - 20) % 10] || suffixes[mod] || suffixes[0])
+}
+
 // Derives every display value the three screens need from the metrics.
 // Mirrors the Parkview Weather design's DCLogic.renderVals().
 function computeValues(metrics, source) {
@@ -60,6 +67,16 @@ function computeValues(metrics, source) {
   const greeting =
     h < 12 ? 'Good morning!' : h < 18 ? 'Good afternoon!' : 'Good evening!'
 
+  // "Friday, August 14th 2026" — from the observation time, like the greeting.
+  const dateLine =
+    at.toLocaleDateString([], { weekday: 'long' }) +
+    ', ' +
+    at.toLocaleDateString([], { month: 'long' }) +
+    ' ' +
+    ordinal(at.getDate()) +
+    ' ' +
+    at.getFullYear()
+
   const dir = wind.direction
   const needleDeg = dir == null || Number.isNaN(dir) ? 0 : dir
 
@@ -87,6 +104,7 @@ function computeValues(metrics, source) {
     presValInHg: presVal + ' inHg',
     presTrend,
     greeting,
+    dateLine,
   }
 }
 
@@ -170,7 +188,8 @@ function Nightfall({ v }) {
         >
           Parkview Observatory
         </div>
-        <div style={{ fontSize: 13, color: '#5f6f93', marginTop: 3 }}>
+        <div style={{ fontSize: 16, color: '#aebbd8', marginTop: 8 }}>{v.dateLine}</div>
+        <div style={{ fontSize: 13, color: '#5f6f93', marginTop: 4 }}>
           as of {v.obs} · {v.srcLabel}
         </div>
       </div>
@@ -375,10 +394,19 @@ function Brass({ v }) {
         />
         <div
           style={{
+            font: "italic 500 17px/1 'Playfair Display',serif",
+            color: '#6b5f44',
+            marginTop: 14,
+          }}
+        >
+          {v.dateLine}
+        </div>
+        <div
+          style={{
             font: "500 13px/1 'Oswald',sans-serif",
             letterSpacing: '.12em',
             color: '#8a8068',
-            marginTop: 12,
+            marginTop: 10,
           }}
         >
           RECORDED {v.obsUpper}
@@ -654,6 +682,8 @@ function Sunny({ v }) {
       <div
         style={{
           position: 'absolute',
+          // Threads the gap between the header block (ends ~144px) and the
+          // temperature, whose line-height:.82 pulls its glyphs up to ~181px.
           top: 150,
           left: 30,
           width: 70,
@@ -718,6 +748,9 @@ function Sunny({ v }) {
         </div>
         <div style={{ font: "600 14px/1 'Nunito'", color: '#7d93ab', marginTop: 6 }}>
           Parkview Observatory · {v.obs}
+        </div>
+        <div style={{ font: "600 14px/1 'Nunito'", color: '#7d93ab', marginTop: 6 }}>
+          {v.dateLine}
         </div>
       </div>
 
