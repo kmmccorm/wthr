@@ -102,6 +102,10 @@ No test runner is configured.
 - **Themes mark up the temperature differently** — Nightfall uses a
   `<span>`, Brass/Sunny a `<div>`. Query by computed font-size across all
   elements, not by tag or text shape.
+- **Don't set `VITE_BASE` from Git Bash.** MSYS path conversion rewrites
+  `VITE_BASE=/wthr/ npm run build` into `/Program Files/Git/wthr/`, and the
+  build silently succeeds with wrong asset paths. Use PowerShell
+  (`$env:VITE_BASE='/wthr/'`) or prefix `MSYS_NO_PATHCONV=1`.
 - **`--width` above 440 does not give a desktop layout.** `.app-shell` is
   `max-width: 440px; margin: 0 auto`, so a 768px viewport just centers the
   same mobile column on empty background. Use it to check that framing,

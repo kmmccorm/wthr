@@ -6,6 +6,16 @@ import './App.css'
 const REFRESH_MS = 60_000
 const THEMES = ['nightfall', 'brass', 'sunny']
 
+// Drives <meta name="theme-color">, which tints the status bar once the app is
+// installed to the home screen. Each value is the top-of-page color of that
+// theme's background so the status bar blends into the page rather than
+// banding against it.
+const THEME_COLORS = {
+  nightfall: '#161f38',
+  brass: '#f7f1e4',
+  sunny: '#bfe3ff',
+}
+
 function num(n, d = 0) {
   return n == null || Number.isNaN(n) ? '--' : n.toFixed(d)
 }
@@ -983,6 +993,11 @@ export default function App() {
       clearInterval(id)
     }
   }, [])
+
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', THEME_COLORS[design])
+  }, [design])
 
   const v = useMemo(() => computeValues(metrics, source), [metrics, source])
 
