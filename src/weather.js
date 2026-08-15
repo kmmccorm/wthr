@@ -22,6 +22,8 @@ function findIssRecord(response) {
   return iss?.data?.[0] ?? null
 }
 
+// Note: the barometer values below are extracted and passed through
+// computeValues(), but no theme currently renders them.
 function findBarRecord(response) {
   const sensors = response?.sensors ?? []
   const bar = sensors.find((s) => s.data_structure_type === 19)

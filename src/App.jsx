@@ -27,9 +27,66 @@ function ordinal(n) {
   return n + (suffixes[(mod - 20) % 10] || suffixes[mod] || suffixes[0])
 }
 
+// Turns the Open-Meteo daily total + hourly probabilities into the two
+// sentences the precipitation tile reads out. The timing comes from the
+// wettest hour still ahead of us today — the daily endpoint gives a total
+// for the day but never says when.
+function rainOutlook(precip) {
+  const chance = precip?.chance
+  const amount = precip?.amount
+  const times = precip?.times
+  const probs = precip?.probs
+
+  let peakAt = null
+  let peakProb = 0
+  if (Array.isArray(times) && Array.isArray(probs)) {
+    const now = Date.now()
+    for (let i = 0; i < times.length; i++) {
+      // Open-Meteo returns wall-clock stamps ("2026-08-15T15:00") under
+      // timezone=auto, which Date parses in the browser's zone — the same
+      // zone as the station.
+      const at = new Date(times[i])
+      const p = probs[i]
+      if (p == null || Number.isNaN(at.getTime()) || at.getTime() < now) continue
+      if (p > peakProb) {
+        peakProb = p
+        peakAt = at
+      }
+    }
+  }
+
+  if (!(chance > 0) && !(amount > 0)) {
+    return { headline: 'Today is expected to be clear and rain-free', detail: '' }
+  }
+
+  // "an 8%", "an 11%", "an 80%" — but "a 45%".
+  const pct = num(chance, 0)
+  const article = pct === '11' || pct === '18' || pct[0] === '8' ? 'an' : 'a'
+  const headline =
+    chance > 0
+      ? `There is ${article} ${pct}% chance of rain today`
+      : 'Rain is in the forecast today'
+  // The headline is the whole day's chance, but the hour is the best of what
+  // is still ahead — so "expected" is only honest when that hour is actually
+  // likely. Below the coin-flip line it gets hedged instead.
+  let detail = ''
+  if (peakAt && peakProb > 0) {
+    // Non-breaking space so a wrap never splits "11 PM" across two lines.
+    const hour = peakAt
+      .toLocaleTimeString([], { hour: 'numeric' })
+      .replace(' ', ' ')
+    detail =
+      peakProb >= 50
+        ? `Rain is expected around ${hour}`
+        : `Any rain would most likely arrive around ${hour}`
+  }
+
+  return { headline, detail }
+}
+
 // Derives every display value the three screens need from the metrics.
 // Mirrors the Parkview Weather design's DCLogic.renderVals().
-function computeValues(metrics, source) {
+function computeValues(metrics, source, precip, precipSource) {
   const m = metrics || {}
 
   const t1 = num(m.temperature, 1)
@@ -60,6 +117,9 @@ function computeValues(metrics, source) {
   const hi = m.heatIndex
   const feels = hi == null || Number.isNaN(hi) ? '--' : hi.toFixed(1) + '°'
 
+  // Pressure is still derived, but no theme currently renders it — the tiles
+  // that showed it came out of all three screens to relieve crowding. Kept so
+  // bringing it back is a JSX change only.
   const bar = m.barometer || {}
   const presLabel = bar.label || '--'
   const presVal = num(bar.value, 2)
@@ -90,6 +150,8 @@ function computeValues(metrics, source) {
   const dir = wind.direction
   const needleDeg = dir == null || Number.isNaN(dir) ? 0 : dir
 
+  const rain = rainOutlook(precip)
+
   return {
     obs,
     obsUpper: obs === '--' ? '--' : obs.toUpperCase(),
@@ -109,12 +171,18 @@ function computeValues(metrics, source) {
     gust: num(m.gust && m.gust.speed, 1),
     hum: num(m.humidity, 0),
     humPct: num(m.humidity, 0) + '%',
+    // Unrendered — see the note by the barometer derivation above.
     presLabel,
     presVal,
     presValInHg: presVal + ' inHg',
     presTrend,
     greeting,
     dateLine,
+    precipChance: num(precip?.chance, 0),
+    precipAmt: num(precip?.amount, 2),
+    precipHeadline: rain.headline,
+    precipDetail: rain.detail,
+    precipCaption: precipSource === 'live' ? 'today · Open-Meteo' : 'today · sample',
   }
 }
 
@@ -318,30 +386,20 @@ function Nightfall({ v }) {
             a touch damp
           </div>
         </div>
-        <div
-          style={{
-            ...tile,
-            gridColumn: '1 / -1',
-            padding: '16px 18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <div style={tileLabel}>Pressure</div>
-            <div style={{ marginTop: 8, fontSize: 26, fontWeight: 500 }}>
-              {v.presLabel}
-            </div>
+        <div style={{ ...tile, gridColumn: '1 / -1', padding: '16px 18px' }}>
+          <div style={tileLabel}>Precipitation</div>
+          <div
+            style={{ marginTop: 10, fontSize: 17, fontWeight: 500, lineHeight: 1.35 }}
+          >
+            {v.precipHeadline}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 22, fontWeight: 400, color: '#cdd9f3' }}>
-              {v.presVal}
-              <span style={{ fontSize: 13, color: '#8595b8' }}> inHg</span>
+          {v.precipDetail && (
+            <div style={{ fontSize: 15, color: '#8595b8', marginTop: 4 }}>
+              {v.precipDetail}
             </div>
-            <div style={{ fontSize: 12, color: '#6b7aa0', marginTop: 4 }}>
-              {v.presTrend}
-            </div>
+          )}
+          <div style={{ fontSize: 12, color: '#6b7aa0', marginTop: 8 }}>
+            {v.precipCaption}
           </div>
         </div>
       </div>
@@ -388,7 +446,7 @@ function Brass({ v }) {
         paddingBottom: 120,
       }}
     >
-      <div style={{ padding: '74px 28px 0', textAlign: 'center' }}>
+      <div style={{ padding: '64px 28px 0', textAlign: 'center' }}>
         <div
           style={{
             font: "500 12px/1 'Oswald',sans-serif",
@@ -429,7 +487,7 @@ function Brass({ v }) {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 22,
-          padding: '30px 28px 0',
+          padding: '18px 28px 0',
         }}
       >
         <div style={{ position: 'relative', width: 26, height: 200 }}>
@@ -500,7 +558,7 @@ function Brass({ v }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '26px 0 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
         <div
           style={{
             position: 'relative',
@@ -615,7 +673,7 @@ function Brass({ v }) {
           display: 'flex',
           justifyContent: 'center',
           gap: 48,
-          padding: '24px 28px 0',
+          padding: '14px 28px 0',
         }}
       >
         <div style={{ textAlign: 'center' }}>
@@ -630,13 +688,41 @@ function Brass({ v }) {
           </div>
           <div style={statLabel}>Humidity</div>
         </div>
-        <div style={{ width: 1, background: '#cdbb98' }} />
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ font: "italic 600 26px/1 'Playfair Display',serif", color: '#2c2519' }}>
-            {v.presLabel}
-          </div>
-          <div style={statLabel}>{v.presValInHg}</div>
+      </div>
+
+      {/* Brass is the tallest theme, so this block folds its source line into
+          the label rather than carrying a separate caption like the others. */}
+      <div style={{ padding: '18px 34px 0', textAlign: 'center' }}>
+        <div
+          style={{
+            font: "400 11px/1.4 'Oswald'",
+            letterSpacing: '.12em',
+            textTransform: 'uppercase',
+            color: '#9a7c4a',
+          }}
+        >
+          Precipitation · {v.precipCaption}
         </div>
+        <div
+          style={{
+            font: "italic 500 18px/1.45 'Playfair Display',serif",
+            color: '#2c2519',
+            marginTop: 10,
+          }}
+        >
+          {v.precipHeadline}
+        </div>
+        {v.precipDetail && (
+          <div
+            style={{
+              font: "400 14px/1.5 'Oswald'",
+              color: '#7a6f55',
+              marginTop: 8,
+            }}
+          >
+            {v.precipDetail}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -846,7 +932,7 @@ function Sunny({ v }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
+          gridTemplateColumns: '1fr 1fr',
           gap: 12,
           padding: '14px 28px 0',
         }}
@@ -883,21 +969,38 @@ function Sunny({ v }) {
             Humidity
           </div>
         </div>
-        <div style={statTile('#dcf3df')}>
-          <div style={{ font: "700 22px/1 'Fredoka',sans-serif", color: '#2f9e54' }}>
-            {v.presLabel}
-          </div>
+      </div>
+
+      <div
+        style={{
+          margin: '14px 28px 0',
+          padding: '16px 18px',
+          borderRadius: 26,
+          background: '#ffffff',
+          boxShadow: '0 8px 22px rgba(120,160,200,.18)',
+        }}
+      >
+        <div style={{ font: "700 14px/1 'Fredoka',sans-serif", color: '#2f4660' }}>
+          Precipitation
+        </div>
+        <div
+          style={{
+            font: "700 15px/1.45 'Nunito'",
+            color: '#2f4660',
+            marginTop: 8,
+          }}
+        >
+          {v.precipHeadline}
+        </div>
+        {v.precipDetail && (
           <div
-            style={{
-              font: "700 11px/1.3 'Nunito'",
-              color: '#4f9468',
-              marginTop: 6,
-              textTransform: 'uppercase',
-              letterSpacing: '.04em',
-            }}
+            style={{ font: "600 13px/1.45 'Nunito'", color: '#7d93ab', marginTop: 4 }}
           >
-            {v.presValInHg}
+            {v.precipDetail}
           </div>
+        )}
+        <div style={{ font: "600 12px/1 'Nunito'", color: '#9bb0c6', marginTop: 8 }}>
+          {v.precipCaption}
         </div>
       </div>
 
@@ -966,6 +1069,8 @@ export default function App() {
   const [metrics, setMetrics] = useState(() => extractMetrics(SAMPLE_RESPONSE))
   const [source, setSource] = useState('sample')
   const [design, setDesign] = useState('nightfall')
+  const [precip, setPrecip] = useState({ chance: 12, amount: 0 })
+  const [precipSource, setPrecipSource] = useState('sample')
 
   useEffect(() => {
     let cancelled = false
@@ -994,12 +1099,49 @@ export default function App() {
     }
   }, [])
 
+  // Daily rain outlook from Open-Meteo (no key, called straight from the
+  // browser — nothing to sign, so it skips the proxy).
+  useEffect(() => {
+    let cancelled = false
+    const LAT = 41.911043,
+      LON = -87.698515
+
+    async function loadPrecip() {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=precipitation_probability_max,precipitation_sum&hourly=precipitation_probability&forecast_days=1&precipitation_unit=inch&timezone=auto`
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const chance = data?.daily?.precipitation_probability_max?.[0]
+        const amount = data?.daily?.precipitation_sum?.[0]
+        const times = data?.hourly?.time
+        const probs = data?.hourly?.precipitation_probability
+        if ((chance != null || amount != null) && !cancelled) {
+          setPrecip({ chance, amount, times, probs })
+          setPrecipSource('live')
+        }
+      } catch {
+        // keep sample/last-good
+      }
+    }
+
+    loadPrecip()
+    const id = setInterval(loadPrecip, 900_000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [])
+
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', THEME_COLORS[design])
   }, [design])
 
-  const v = useMemo(() => computeValues(metrics, source), [metrics, source])
+  const v = useMemo(
+    () => computeValues(metrics, source, precip, precipSource),
+    [metrics, source, precip, precipSource]
+  )
 
   if (!metrics) {
     return (
