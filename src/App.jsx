@@ -148,7 +148,7 @@ function Nightfall({ v }) {
         position: 'relative',
         minHeight: '100dvh',
         background:
-          'radial-gradient(120% 80% at 50% -10%, #243352 0%, #161f38 42%, #0b1020 100%)',
+          'linear-gradient(135deg, #3D4C6B 0%, #2F3851 50%, #1F2434 100%)',
         color: '#eef2fb',
         fontFamily: "-apple-system,'SF Pro Display',system-ui",
         overflow: 'hidden',
@@ -193,7 +193,7 @@ function Nightfall({ v }) {
             fontWeight: 600,
             letterSpacing: '.14em',
             textTransform: 'uppercase',
-            color: '#7e8db0',
+            color: '#eef2fb',
           }}
         >
           Parkview Observatory
