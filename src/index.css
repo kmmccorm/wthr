@@ -11,9 +11,17 @@ html,
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
+/* The screens are sized to exactly one viewport, so any scrolling at all is
+   a bug. `position: fixed` is the part iOS actually respects: without it a
+   home-screen PWA still rubber-bands the body even when nothing overflows. */
 body {
+  position: fixed;
+  inset: 0;
   background: #0b1020;
   color: #eef2fb;
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
@@ -23,7 +31,7 @@ body {
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100%;
 }
 
 /* Design system keyframes (ported from Parkview Weather) */

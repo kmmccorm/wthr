@@ -16,6 +16,23 @@ const THEME_COLORS = {
   sunny: '#bfe3ff',
 }
 
+// Bottom space each screen leaves for the floating Switcher, which is
+// position: fixed and so does not reserve any of its own. 41px is the pill's
+// height; the offset below it matches the Switcher's own `bottom`.
+const SWITCHER_CLEARANCE = 'calc(max(env(safe-area-inset-bottom), 32px) + 53px)'
+
+// Vertical gap between two blocks of a screen. `size` is the design's resting
+// value — what it renders at whenever there is room — and the gap squeezes,
+// never past `min`, when the viewport is shorter than the design. Screens are
+// locked to exactly one viewport height, so these gaps are what absorb the
+// difference; without them a short screen would clip its last tile instead.
+// Only used below each theme's hero: the absolutely-positioned decorations up
+// top (stars, moon, sun, the drifting cloud) are tuned against fixed offsets,
+// so that region stays rigid.
+function Gap({ size, min }) {
+  return <div style={{ flex: `0 1 ${size}px`, minHeight: min }} />
+}
+
 function num(n, d = 0) {
   return n == null || Number.isNaN(n) ? '--' : n.toFixed(d)
 }
@@ -214,13 +231,15 @@ function Nightfall({ v }) {
     <div
       style={{
         position: 'relative',
-        minHeight: '100dvh',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         background:
           'linear-gradient(135deg, #3D4C6B 0%, #2F3851 50%, #1F2434 100%)',
         color: '#eef2fb',
         fontFamily: "-apple-system,'SF Pro Display',system-ui",
         overflow: 'hidden',
-        paddingBottom: 120,
+        paddingBottom: SWITCHER_CLEARANCE,
       }}
     >
       <div style={star(120, 44, 3, '#fff', '3.5s', '0s')} />
@@ -254,7 +273,7 @@ function Nightfall({ v }) {
         />
       </div>
 
-      <div style={{ padding: '78px 30px 0' }}>
+      <div style={{ padding: '78px 30px 0', flexShrink: 0 }}>
         <div
           style={{
             fontSize: 14,
@@ -272,7 +291,8 @@ function Nightfall({ v }) {
         </div>
       </div>
 
-      <div style={{ padding: '46px 30px 0', position: 'relative' }}>
+      <Gap size={46} min={24} />
+      <div style={{ padding: '0 30px', position: 'relative', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', lineHeight: 0.86 }}>
           <span style={{ fontSize: 148, fontWeight: 300, letterSpacing: '-.05em' }}>
             {v.tempBig}
@@ -299,10 +319,12 @@ function Nightfall({ v }) {
         </div>
       </div>
 
+      <Gap size={36} min={12} />
       <div
         style={{
-          margin: '36px 30px 0',
+          margin: '0 30px',
           position: 'relative',
+          flexShrink: 0,
           height: 46,
           borderRadius: 16,
           overflow: 'hidden',
@@ -358,12 +380,14 @@ function Nightfall({ v }) {
         </div>
       </div>
 
+      <Gap size={14} min={8} />
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: 12,
-          padding: '14px 30px 0',
+          padding: '0 30px',
+          flexShrink: 0,
         }}
       >
         <div style={tile}>
@@ -438,15 +462,17 @@ function Brass({ v }) {
     <div
       style={{
         position: 'relative',
-        minHeight: '100dvh',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         background:
           'radial-gradient(130% 90% at 50% 0%, #f7f1e4 0%, #efe6d3 60%, #e6dcc4 100%)',
         color: '#2c2519',
         overflow: 'hidden',
-        paddingBottom: 120,
+        paddingBottom: SWITCHER_CLEARANCE,
       }}
     >
-      <div style={{ padding: '64px 28px 0', textAlign: 'center' }}>
+      <div style={{ padding: '64px 28px 0', textAlign: 'center', flexShrink: 0 }}>
         <div
           style={{
             font: "500 12px/1 'Oswald',sans-serif",
@@ -481,13 +507,15 @@ function Brass({ v }) {
         </div>
       </div>
 
+      <Gap size={18} min={8} />
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 22,
-          padding: '18px 28px 0',
+          padding: '0 28px',
+          flexShrink: 0,
         }}
       >
         <div style={{ position: 'relative', width: 26, height: 200 }}>
@@ -558,7 +586,8 @@ function Brass({ v }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
+      <Gap size={12} min={6} />
+      <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
         <div
           style={{
             position: 'relative',
@@ -668,12 +697,14 @@ function Brass({ v }) {
         </div>
       </div>
 
+      <Gap size={14} min={6} />
       <div
         style={{
           display: 'flex',
           justifyContent: 'center',
           gap: 48,
-          padding: '14px 28px 0',
+          padding: '0 28px',
+          flexShrink: 0,
         }}
       >
         <div style={{ textAlign: 'center' }}>
@@ -692,7 +723,8 @@ function Brass({ v }) {
 
       {/* Brass is the tallest theme, so this block folds its source line into
           the label rather than carrying a separate caption like the others. */}
-      <div style={{ padding: '18px 34px 0', textAlign: 'center' }}>
+      <Gap size={18} min={8} />
+      <div style={{ padding: '0 34px', textAlign: 'center', flexShrink: 0 }}>
         <div
           style={{
             font: "400 11px/1.4 'Oswald'",
@@ -766,13 +798,15 @@ function Sunny({ v }) {
     <div
       style={{
         position: 'relative',
-        minHeight: '100dvh',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         background:
           'linear-gradient(180deg, #bfe3ff 0%, #e8f4ff 38%, #fff8ec 100%)',
         color: '#34465c',
         fontFamily: "'Nunito',system-ui",
         overflow: 'hidden',
-        paddingBottom: 120,
+        paddingBottom: SWITCHER_CLEARANCE,
       }}
     >
       <div
@@ -838,7 +872,7 @@ function Sunny({ v }) {
         <div style={cheek(56)} />
       </div>
 
-      <div style={{ padding: '80px 28px 0' }}>
+      <div style={{ padding: '80px 28px 0', flexShrink: 0 }}>
         <div style={{ font: "700 22px/1.1 'Fredoka',sans-serif", color: '#2f4660' }}>
           {v.greeting}
         </div>
@@ -850,7 +884,9 @@ function Sunny({ v }) {
         </div>
       </div>
 
-      <div style={{ padding: '24px 28px 0' }}>
+      {/* Not a Gap: the cloud at top 150 threads the corridor between this
+          block and the header, so this spacing has to stay rigid. */}
+      <div style={{ padding: '24px 28px 0', flexShrink: 0 }}>
         <div
           style={{
             font: "700 132px/.82 'Fredoka',sans-serif",
@@ -878,12 +914,14 @@ function Sunny({ v }) {
         </div>
       </div>
 
+      <Gap size={30} min={12} />
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 16,
-          margin: '30px 28px 0',
+          margin: '0 28px',
+          flexShrink: 0,
           padding: '16px 18px',
           borderRadius: 26,
           background: '#ffffff',
@@ -929,12 +967,14 @@ function Sunny({ v }) {
         </div>
       </div>
 
+      <Gap size={14} min={6} />
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
           gap: 12,
-          padding: '14px 28px 0',
+          padding: '0 28px',
+          flexShrink: 0,
         }}
       >
         <div style={statTile('#ffe4d6')}>
@@ -971,9 +1011,11 @@ function Sunny({ v }) {
         </div>
       </div>
 
+      <Gap size={14} min={6} />
       <div
         style={{
-          margin: '14px 28px 0',
+          margin: '0 28px',
+          flexShrink: 0,
           padding: '16px 18px',
           borderRadius: 26,
           background: '#ffffff',
@@ -1004,10 +1046,12 @@ function Sunny({ v }) {
         </div>
       </div>
 
+      <Gap size={22} min={8} />
       <div
         style={{
           textAlign: 'center',
-          padding: '22px 28px 0',
+          padding: '0 28px',
+          flexShrink: 0,
           font: "600 13px/1.4 'Nunito'",
           color: '#9bb0c6',
         }}
